@@ -3,7 +3,7 @@
 // The source code in this file is released under the MIT license.
 // Go to http://opensource.org/licenses/MIT for the full license details.
 // 
-// Convert to C++ by Filmote
+// Converted to C++ by Filmote
 
 // *** A TILEMAP DEMO FOR THE POKITTO ***
 
@@ -13,6 +13,9 @@
 
 using PC = Pokitto::Core;
 using PD = Pokitto::Display;
+
+const uint16_t worldWidth = 16 * 16;        // 16 tiles of 16 pixels
+const uint16_t worldHeight = 16 * 16;        // 16 tiles of 16 pixels
 
 enum TileType {
     
@@ -24,6 +27,85 @@ enum TileType {
 }; 
 
 Tilemap tilemap;
+
+int16_t x = 48;
+int16_t y = 48;
+
+
+void calculateViewPortPosition(int16_t &xViewPort, int16_t &yViewPort) {
+    
+    if (x < PD::width / 2) {
+        
+        xViewPort = 0;
+        
+    }
+    else if (x > worldWidth - PD::width / 2) {
+
+        xViewPort = PD::width - worldWidth;
+        
+    }
+    else {
+        
+        xViewPort = PD::width / 2 - x;
+
+    }
+    
+    if (y < PD::height / 2) {
+        
+        yViewPort = 0;
+        
+    }
+    else if (y > worldHeight - PD::height / 2) {
+
+        yViewPort = PD::height - worldHeight;
+        
+    }
+    else {
+        
+        yViewPort = PD::height / 2 - y;
+
+    }
+    
+}
+
+
+
+void calculatePlayerPosition(int16_t &xPlayer, int16_t &yPlayer) {
+    
+    if (x < PD::width / 2) {
+        
+        xPlayer = x;
+        
+    }
+    else if (x > worldWidth - PD::width / 2) {
+
+        xPlayer = x - (worldWidth - PD::width);
+        
+    }
+    else {
+        
+        xPlayer = PD::width / 2;
+
+    }
+    
+    if (y < PD::height / 2) {
+        
+        yPlayer = y;
+        
+    }
+    else if (y > worldHeight - PD::height / 2) {
+
+        yPlayer = y - (worldHeight - PD::height);
+        
+    }
+    else {
+        
+        yPlayer = PD::height / 2;
+
+    }
+
+}
+
 
 int main(){
 
@@ -41,11 +123,6 @@ int main(){
     tilemap.tiles[TileType::Grass] = Data::grass16;
     tilemap.tiles[TileType::Water] = Data::water16;
 
-    int16_t x = -20;
-    int16_t y = -50;
-
-    uint16_t worldWidth = 16 * 16;        // 16 tiles of 16 pixels
-    uint16_t worldHeight = 16 * 16;        // 16 tiles of 16 pixels
 
     int16_t heroOnScreenX = PD::width / 2; 
     int16_t heroOnScreenY = PD::height / 2;
@@ -60,17 +137,16 @@ int main(){
         int16_t oldX = x;
         int16_t oldY = y;
 
-        if (PC::buttons.pressed(BTN_LEFT)  || PC::buttons.repeat(BTN_LEFT, 1))    { x = x + 1; }
-        if (PC::buttons.pressed(BTN_RIGHT) || PC::buttons.repeat(BTN_RIGHT, 1))   { x = x - 1; }
-        if (PC::buttons.pressed(BTN_UP)    || PC::buttons.repeat(BTN_UP, 1))      { y = y + 1; }
-        if (PC::buttons.pressed(BTN_DOWN)  || PC::buttons.repeat(BTN_DOWN, 1))    { y = y - 1; }
+        if (PC::buttons.pressed(BTN_LEFT)  || PC::buttons.repeat(BTN_LEFT, 1))    { x = x - 1; }
+        if (PC::buttons.pressed(BTN_RIGHT) || PC::buttons.repeat(BTN_RIGHT, 1))   { x = x + 1; }
+        if (PC::buttons.pressed(BTN_UP)    || PC::buttons.repeat(BTN_UP, 1))      { y = y - 1; }
+        if (PC::buttons.pressed(BTN_DOWN)  || PC::buttons.repeat(BTN_DOWN, 1))    { y = y + 1; }
 
 
         // Check the map tile under the girl.
         
-        int16_t girlCenterInMapX = (heroOnScreenX + 6) - x;
-        int16_t girlCerterInMapY = (heroOnScreenY + 7) - y;
-        uint8_t tileId = tilemap.GetTileId(girlCenterInMapX, girlCerterInMapY, 16);
+        uint8_t tileId = tilemap.GetTileId(x + 6, y + 7, 16);
+
 
         // If the tile is not grass, do not move.
         
@@ -82,16 +158,24 @@ int main(){
         
         // Check for out of bounds.
         
-         if (x > 0)                          x = 0;
-         if (x + worldWidth < PD::width)     x = PD::width - worldWidth;
-         if (y > 0)                          y = 0;
-         if (y + worldHeight < PD::height)   y = PD::height - worldHeight;
+        if (x < 0)                          x = 0;
+        if (x > worldWidth - 12)            x = worldWidth;
+        if (y < 0)                          y = 0;
+        if (y > worldHeight - 15)           y = worldHeight;
         
         
-        tilemap.draw(x, y);
-        PD::drawBitmapData(heroOnScreenX, heroOnScreenY, 12, 15, Data::girl12x15Pixels);
+        int16_t xViewPort;
+        int16_t yViewPort;
         
+        calculateViewPortPosition(xViewPort, yViewPort);
+        tilemap.draw(xViewPort, yViewPort);
 
+        int16_t xPlayer;
+        int16_t yPlayer;
+        
+        calculatePlayerPosition(xPlayer, yPlayer);
+        PD::drawBitmapData(xPlayer, yPlayer, 12, 15, Data::girl12x15Pixels);
+        
     }
     
     return 0;
