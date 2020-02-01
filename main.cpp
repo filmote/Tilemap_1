@@ -28,8 +28,9 @@ Tilemap tilemap;
 int main(){
 
     PC::begin();
+    PD::loadRGBPalette(palettePico);   
     PD::persistence = true;
-    PD::invisiblecolor = 0;
+    PD::invisiblecolor = 12;
 
 
     // Initialise the map ..
@@ -82,9 +83,9 @@ int main(){
         // Check for out of bounds.
         
          if (x > 0)                          x = 0;
-         if (x + worldWidth < PD::width)     x = PD::worldWidth - mapWidth;
+         if (x + worldWidth < PD::width)     x = PD::width - worldWidth;
          if (y > 0)                          y = 0;
-         if (y + worldHeight < PD::height)   y = PD::worldHeight - mapHeight;
+         if (y + worldHeight < PD::height)   y = PD::height - worldHeight;
         
         
         tilemap.draw(x, y);
